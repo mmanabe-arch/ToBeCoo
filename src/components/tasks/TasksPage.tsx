@@ -211,37 +211,56 @@ function TaskItem({
       </button>
 
       {/* Progress controls (expanded) */}
-      {expanded && !isDone && (
+      {expanded && (
         <div className="pb-3 space-y-2">
-          <div className="h-0.5 bg-background-secondary rounded-full overflow-hidden">
-            <div className="h-full bg-text-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="flex gap-1">
-            {PROGRESS_STEPS.map(step => (
-              <button
-                key={step}
-                onClick={() => onProgressChange(task.id, step)}
-                className={`flex-1 py-2 text-[10px] border font-medium transition-colors ${
-                  progress >= step
-                    ? 'border-text-primary bg-text-primary text-white'
-                    : 'border-border-color text-text-muted'
-                }`}
-              >
-                {step}%
+          {/* Goal & Deadline */}
+          {(task.goal || task.deadline) && (
+            <div className="space-y-1 pb-1">
+              {task.goal && (
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  <span className="text-[10px] text-text-muted uppercase tracking-wide mr-1">ゴール</span>
+                  {task.goal}
+                </p>
+              )}
+              {task.deadline && (
+                <p className={`text-xs ${new Date(task.deadline) < new Date() && !isDone ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
+                  <span className="text-[10px] uppercase tracking-wide mr-1">期限</span>
+                  {new Date(task.deadline).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  {new Date(task.deadline) < new Date() && !isDone && ' ⚠ 期限超過'}
+                </p>
+              )}
+            </div>
+          )}
+          {!isDone && (
+            <>
+              <div className="h-0.5 bg-background-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-text-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+              </div>
+              <div className="flex gap-1">
+                {PROGRESS_STEPS.map(step => (
+                  <button
+                    key={step}
+                    onClick={() => onProgressChange(task.id, step)}
+                    className={`flex-1 py-2 text-[10px] border font-medium transition-colors ${
+                      progress >= step
+                        ? 'border-text-primary bg-text-primary text-white'
+                        : 'border-border-color text-text-muted'
+                    }`}
+                  >
+                    {step}%
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <div className="flex gap-3 pt-1">
+            {isDone && (
+              <button onClick={() => onProgressChange(task.id, 0)} className="text-xs text-text-muted border border-border-color px-3 py-1">
+                未完了に戻す
               </button>
-            ))}
+            )}
+            <button onClick={() => onDelete(task.id)} className="text-xs text-text-muted">削除</button>
           </div>
-          <button onClick={() => onDelete(task.id)} className="text-[10px] text-text-muted">
-            削除
-          </button>
-        </div>
-      )}
-      {expanded && isDone && (
-        <div className="pb-3">
-          <button onClick={() => onProgressChange(task.id, 0)} className="text-xs text-text-muted border border-border-color px-3 py-1 mr-2">
-            未完了に戻す
-          </button>
-          <button onClick={() => onDelete(task.id)} className="text-xs text-text-muted">削除</button>
         </div>
       )}
     </div>
@@ -259,11 +278,21 @@ function AddTaskForm({
 }) {
   const addTask = useStore(s => s.addTask);
   const [title, setTitle] = useState('');
+  const [goal, setGoal] = useState('');
+  const [deadline, setDeadline] = useState('');
   const [projectId, setProjectId] = useState(projects[0]?.id || '');
 
   const handleSubmit = () => {
     if (!title.trim()) return;
-    addTask({ title: title.trim(), projectId, weekKey, status: 'todo', progress: 0 });
+    addTask({
+      title: title.trim(),
+      projectId,
+      weekKey,
+      status: 'todo',
+      progress: 0,
+      goal: goal.trim() || undefined,
+      deadline: deadline || undefined,
+    });
     setTitle('');
     onClose();
   };
@@ -278,6 +307,21 @@ function AddTaskForm({
         onKeyDown={e => e.key === 'Enter' && handleSubmit()}
         autoFocus
       />
+      <input
+        value={goal}
+        onChange={e => setGoal(e.target.value)}
+        placeholder="ゴール（任意）"
+        className="w-full text-xs bg-transparent border-b border-border-color pb-2 text-text-primary placeholder:text-text-muted"
+      />
+      <div className="flex items-center gap-2">
+        <label className="text-[10px] text-text-muted uppercase tracking-wide flex-shrink-0">期限</label>
+        <input
+          type="date"
+          value={deadline}
+          onChange={e => setDeadline(e.target.value)}
+          className="flex-1 text-xs bg-transparent border border-border-color px-2 py-1.5 text-text-secondary"
+        />
+      </div>
       {projects.length > 0 && (
         <select
           value={projectId}

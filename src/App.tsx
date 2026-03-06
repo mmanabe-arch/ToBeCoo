@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useStore } from './store/useStore';
+import { useNotifications } from './hooks/useNotifications';
 
 import SetupScreen from './components/setup/SetupScreen';
 import BottomNav from './components/layout/BottomNav';
@@ -43,16 +45,32 @@ function AppRoutes() {
   );
 }
 
-export default function App() {
-  const profile = useStore(s => s.profile);
-
-  if (!profile?.setupCompleted) {
-    return <SetupScreen />;
-  }
+function AppWithNotifications() {
+  useNotifications();
 
   return (
     <BrowserRouter>
       <AppRoutes />
     </BrowserRouter>
   );
+}
+
+export default function App() {
+  const profile = useStore(s => s.profile);
+
+  // Register service worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {
+        // SW registration failed (e.g. in dev without HTTPS) - notifications
+        // will fall back to the Notification API directly
+      });
+    }
+  }, []);
+
+  if (!profile?.setupCompleted) {
+    return <SetupScreen />;
+  }
+
+  return <AppWithNotifications />;
 }

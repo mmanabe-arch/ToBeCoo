@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit3, ChevronRight, Sun, Moon, Plus, X, Settings } from 'lucide-react';
+import { Edit3, ChevronRight, Sun, Moon, Settings } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { getTodayString, getCurrentWeekKey, getCurrentQuarterInfo, getQuarterLabel } from '../../utils/dateUtils';
 import type { Routine } from '../../types';
-
-const PROGRESS_STEPS = [5, 10, 30, 50, 100];
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const {
     profile, vision, quarters, tasks, dailyLogs, learningLogs,
-    routines, projects, toggleRoutineCheck, updateTaskProgress,
+    routines, projects, toggleRoutineCheck,
   } = useStore();
 
   const today = getTodayString();
@@ -187,39 +185,35 @@ export default function Dashboard() {
             <div className="h-full bg-text-primary transition-all rounded-full" style={{ width: `${weekRate}%` }} />
           </div>
 
-          {/* Active tasks with progress */}
+          {/* Active tasks with progress (display only) */}
           {activeTasks.length > 0 && (
-            <div className="pt-2 border-t border-border-color space-y-3">
+            <div className="pt-2 border-t border-border-color space-y-2">
               {activeTasks.map(task => (
-                <div key={task.id}>
-                  <div className="flex items-center justify-between mb-1.5">
+                <button
+                  key={task.id}
+                  onClick={() => navigate('/tasks')}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-center justify-between mb-1">
                     <p className="text-xs text-text-primary flex-1 mr-2 line-clamp-1">{task.title}</p>
-                    <span className="text-xs font-medium text-text-secondary flex-shrink-0">
-                      {task.progress ?? 0}%
-                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {task.deadline && (
+                        <span className={`text-[10px] ${
+                          new Date(task.deadline) < new Date() ? 'text-text-primary font-medium' : 'text-text-muted'
+                        }`}>
+                          {new Date(task.deadline).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
+                        </span>
+                      )}
+                      <span className="text-xs font-medium text-text-secondary">{task.progress ?? 0}%</span>
+                    </div>
                   </div>
-                  <div className="h-0.5 bg-background-secondary rounded-full overflow-hidden mb-1.5">
+                  <div className="h-0.5 bg-background-secondary rounded-full overflow-hidden">
                     <div
                       className="h-full bg-text-primary rounded-full transition-all"
                       style={{ width: `${task.progress ?? 0}%` }}
                     />
                   </div>
-                  <div className="flex gap-1">
-                    {PROGRESS_STEPS.map(step => (
-                      <button
-                        key={step}
-                        onClick={() => updateTaskProgress(task.id, step)}
-                        className={`flex-1 py-1 text-[10px] border transition-colors ${
-                          (task.progress ?? 0) >= step
-                            ? 'border-text-primary bg-text-primary text-white'
-                            : 'border-border-color text-text-muted'
-                        }`}
-                      >
-                        {step}%
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

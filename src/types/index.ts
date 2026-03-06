@@ -60,6 +60,8 @@ export interface Task {
   weekKey: string;
   status: TaskStatus;
   progress: number;
+  goal?: string;      // タスクのゴール
+  deadline?: string;  // 期限 YYYY-MM-DD
   note?: string;
   createdAt: string;
   updatedAt: string;
