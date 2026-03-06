@@ -45,6 +45,7 @@ export default function MorningCheckin() {
       projectId,
       weekKey,
       status: 'in_progress',
+      progress: 0,
     });
     setNewTaskTitle('');
   };

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Archive, Plus, ChevronRight } from 'lucide-react';
+import { Plus, ChevronRight, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import type { Project, ProjectCategory } from '../../types';
+import type { ProjectCategory } from '../../types';
 import PageHeader from '../layout/PageHeader';
 
 const CATEGORY_LABELS: Record<ProjectCategory, string> = {
@@ -12,7 +13,8 @@ const CATEGORY_LABELS: Record<ProjectCategory, string> = {
 };
 
 export default function ProjectsPage() {
-  const { projects, addProject, updateProject, archiveProject } = useStore();
+  const navigate = useNavigate();
+  const { projects, addProject, updateProject } = useStore();
   const [showArchived, setShowArchived] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
@@ -32,38 +34,48 @@ export default function ProjectsPage() {
         }
       />
 
-      {/* Toggle */}
       <div className="flex border-b border-border-color">
         <button
           onClick={() => setShowArchived(false)}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
-            !showArchived ? 'text-text-primary border-b-2 border-text-primary' : 'text-text-muted'
-          }`}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${!showArchived ? 'text-text-primary border-b-2 border-text-primary' : 'text-text-muted'}`}
         >
           アクティブ ({active.length})
         </button>
         <button
           onClick={() => setShowArchived(true)}
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
-            showArchived ? 'text-text-primary border-b-2 border-text-primary' : 'text-text-muted'
-          }`}
+          className={`flex-1 py-3 text-sm font-medium transition-colors ${showArchived ? 'text-text-primary border-b-2 border-text-primary' : 'text-text-muted'}`}
         >
           アーカイブ ({archived.length})
         </button>
       </div>
 
-      <div className="px-5 py-4 space-y-3 pb-24">
-        {showAdd && (
-          <AddProjectForm onClose={() => setShowAdd(false)} />
-        )}
+      <div className="px-5 py-4 space-y-2 pb-24">
+        {showAdd && <AddProjectForm onClose={() => setShowAdd(false)} />}
 
         {visible.map(project => (
-          <ProjectCard
+          <button
             key={project.id}
-            project={project}
-            onArchive={() => archiveProject(project.id)}
-            onUnarchive={() => updateProject(project.id, { archived: false })}
-          />
+            onClick={() => navigate(`/projects/${project.id}`)}
+            className="w-full flex items-center justify-between p-4 border border-border-color text-left hover:border-text-secondary transition-colors"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] text-text-muted border border-border-color px-1.5 py-0.5">
+                  {CATEGORY_LABELS[project.category]}
+                </span>
+                {project.archived && (
+                  <span className="text-[10px] text-text-muted border border-border-color px-1.5 py-0.5">
+                    アーカイブ
+                  </span>
+                )}
+              </div>
+              <p className="text-sm font-medium text-text-primary">{project.name}</p>
+              {project.goal && (
+                <p className="text-xs text-text-muted mt-1 line-clamp-1">{project.goal}</p>
+              )}
+            </div>
+            <Settings size={14} className="text-text-muted flex-shrink-0" />
+          </button>
         ))}
 
         {visible.length === 0 && !showAdd && (
@@ -74,63 +86,6 @@ export default function ProjectsPage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function ProjectCard({
-  project,
-  onArchive,
-  onUnarchive,
-}: {
-  project: Project;
-  onArchive: () => void;
-  onUnarchive: () => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className="border border-border-color">
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between p-4"
-      >
-        <div className="text-left">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] text-text-muted border border-border-color px-1.5 py-0.5">
-              {CATEGORY_LABELS[project.category]}
-            </span>
-          </div>
-          <p className="text-sm font-medium text-text-primary">{project.name}</p>
-        </div>
-        <ChevronRight size={16} className={`text-text-muted transition-transform ${expanded ? 'rotate-90' : ''}`} />
-      </button>
-
-      {expanded && (
-        <div className="px-4 pb-4 border-t border-border-color">
-          {project.description && (
-            <p className="text-xs text-text-secondary mt-3 mb-4 leading-relaxed">{project.description}</p>
-          )}
-          <div className="flex gap-2">
-            {project.archived ? (
-              <button
-                onClick={onUnarchive}
-                className="flex-1 py-2 border border-border-color text-xs text-text-secondary"
-              >
-                アーカイブ解除
-              </button>
-            ) : (
-              <button
-                onClick={onArchive}
-                className="flex items-center gap-1 py-2 px-3 border border-border-color text-xs text-text-secondary"
-              >
-                <Archive size={12} />
-                アーカイブ
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -156,16 +111,21 @@ function AddProjectForm({ onClose }: { onClose: () => void }) {
         placeholder="プロジェクト名"
         className="w-full text-sm bg-transparent border-b border-border-color pb-2 focus:border-text-primary transition-colors text-text-primary placeholder:text-text-muted"
         autoFocus
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
       />
-      <select
-        value={category}
-        onChange={e => setCategory(e.target.value as ProjectCategory)}
-        className="w-full text-xs text-text-secondary bg-transparent border border-border-color px-2 py-2"
-      >
-        {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
-          <option key={v} value={v}>{l}</option>
+      <div className="flex gap-1">
+        {(Object.keys(CATEGORY_LABELS) as ProjectCategory[]).map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategory(cat)}
+            className={`flex-1 py-2 text-[10px] border transition-colors ${
+              category === cat ? 'border-text-primary bg-text-primary text-white' : 'border-border-color text-text-secondary'
+            }`}
+          >
+            {CATEGORY_LABELS[cat]}
+          </button>
         ))}
-      </select>
+      </div>
       <textarea
         value={description}
         onChange={e => setDescription(e.target.value)}
@@ -174,16 +134,8 @@ function AddProjectForm({ onClose }: { onClose: () => void }) {
         className="w-full text-xs bg-transparent border border-border-color p-2 resize-none text-text-primary placeholder:text-text-muted"
       />
       <div className="flex gap-2">
-        <button
-          onClick={handleSubmit}
-          disabled={!name.trim()}
-          className="flex-1 py-2 bg-text-primary text-white text-xs font-medium disabled:opacity-40"
-        >
-          作成
-        </button>
-        <button onClick={onClose} className="flex-1 py-2 border border-border-color text-xs text-text-secondary">
-          キャンセル
-        </button>
+        <button onClick={handleSubmit} disabled={!name.trim()} className="flex-1 py-2 bg-text-primary text-white text-xs font-medium disabled:opacity-40">作成</button>
+        <button onClick={onClose} className="flex-1 py-2 border border-border-color text-xs text-text-secondary">キャンセル</button>
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ export interface UserProfile {
   role: string;
   otherActivities: string[];
   setupCompleted: boolean;
-  morningReminderTime: string; // HH:mm
-  eveningReminderTime: string; // HH:mm
-  weeklyReflectionDay: number; // 0=Sun ... 6=Sat
-  weeklyReflectionTime: string; // HH:mm
+  morningReminderTime: string;
+  eveningReminderTime: string;
+  weeklyReflectionDay: number;
+  weeklyReflectionTime: string;
   skillReminderInterval: 'monthly' | 'quarterly';
 }
 
@@ -26,11 +26,12 @@ export interface Vision {
 export interface Quarter {
   id: string;
   year: number;
-  quarter: 1 | 2 | 3 | 4; // Q1-Q4
-  theme: string; // 今四半期の重点テーマ
+  quarter: 1 | 2 | 3 | 4;
+  theme: string;
   achievements: string;
   failures: string;
   nextTheme: string;
+  slideUrl?: string;
   aiSummary?: string;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +45,7 @@ export interface Project {
   name: string;
   category: ProjectCategory;
   description: string;
+  goal?: string;
   archived: boolean;
   createdAt: string;
 }
@@ -55,30 +57,42 @@ export interface Task {
   id: string;
   projectId: string;
   title: string;
-  weekKey: string; // YYYY-WW
+  weekKey: string;
   status: TaskStatus;
+  progress: number;
   note?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+// ==================== Routine ====================
+export interface Routine {
+  id: string;
+  name: string;
+  emoji: string;
+  order: number;
+  active: boolean;
+  createdAt: string;
+}
+
 // ==================== Daily Log ====================
 export interface DailyLog {
   id: string;
-  date: string; // YYYY-MM-DD
-  todayFocus: string; // 今日意識すること（翌日用）
-  morningTasks: string[]; // task IDs selected in morning
+  date: string;
+  todayFocus: string;
+  morningTasks: string[];
   morningCheckedAt?: string;
-  eveningCompletedTasks: string[]; // task IDs completed
-  eveningNotes: Record<string, string>; // taskId -> note
-  eveningReflection: string; // 今日の一言振り返り
+  eveningCompletedTasks: string[];
+  eveningNotes: Record<string, string>;
+  eveningReflection: string;
   eveningCheckedAt?: string;
+  routineChecks: string[];
 }
 
 // ==================== Reflection ====================
 export interface DailyReflection {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   learnings: string;
   insights: string;
   tomorrowFocus: string;
@@ -86,7 +100,7 @@ export interface DailyReflection {
 
 export interface WeeklyReflection {
   id: string;
-  weekKey: string; // YYYY-WW
+  weekKey: string;
   achievements: string;
   failures: string;
   nextWeekFocus: string;
@@ -117,11 +131,11 @@ export interface LearningLog {
   id: string;
   title: string;
   category: LearningCategory;
-  durationMinutes: number;
-  cost: number;
-  date: string; // YYYY-MM-DD
-  learnings: [string, string, string]; // 3つの学び
-  action: string; // 1つの実践すること
+  content: string;
+  learnings: [string, string, string];
+  action: string;
+  link?: string;
+  date: string;
   relatedSkillId?: string;
   createdAt: string;
 }
@@ -142,6 +156,7 @@ export interface AppState {
   quarters: Quarter[];
   projects: Project[];
   tasks: Task[];
+  routines: Routine[];
   dailyLogs: DailyLog[];
   dailyReflections: DailyReflection[];
   weeklyReflections: WeeklyReflection[];
