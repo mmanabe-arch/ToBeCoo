@@ -53,17 +53,17 @@ export default function MorningCheckin() {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
       {/* Header */}
-      <div className="px-5 pt-10 pb-6 border-b border-border-color">
+      <div className="px-5 pt-10 pb-6 border-b border-border-color animate-fade-in">
         <div className="flex items-center gap-2 mb-3">
           <Sun size={16} strokeWidth={1.5} className="text-text-secondary" />
           <p className="text-xs text-text-muted uppercase tracking-wide">Morning Check-in</p>
         </div>
-        <h2 className="text-2xl font-light text-text-primary">
+        <h2 className="text-2xl font-light text-text-primary animate-slide-up">
           {new Date().toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'long' })}
         </h2>
       </div>
 
-      <div className="flex-1 px-5 py-6 space-y-6 overflow-y-auto pb-24">
+      <div className="flex-1 px-5 py-6 space-y-6 overflow-y-auto pb-24 stagger-children">
         {/* Yesterday's focus */}
         {yesterdayLog?.todayFocus && (
           <div className="border-l-2 border-text-primary pl-4">

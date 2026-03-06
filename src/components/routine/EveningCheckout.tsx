@@ -47,15 +47,15 @@ export default function EveningCheckout() {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
       {/* Header */}
-      <div className="px-5 pt-10 pb-6 border-b border-border-color">
+      <div className="px-5 pt-10 pb-6 border-b border-border-color animate-fade-in">
         <div className="flex items-center gap-2 mb-3">
           <Moon size={16} strokeWidth={1.5} className="text-text-secondary" />
           <p className="text-xs text-text-muted uppercase tracking-wide">Evening Check-out</p>
         </div>
-        <h2 className="text-2xl font-light text-text-primary">お疲れ様でした</h2>
+        <h2 className="text-2xl font-light text-text-primary animate-slide-up">お疲れ様でした</h2>
       </div>
 
-      <div className="flex-1 px-5 py-6 space-y-6 overflow-y-auto pb-24">
+      <div className="flex-1 px-5 py-6 space-y-6 overflow-y-auto pb-24 stagger-children">
         {/* Task completion */}
         {morningTasks.length > 0 && (
           <div>

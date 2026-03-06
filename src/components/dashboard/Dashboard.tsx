@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit3, ChevronRight, Sun, Moon, Settings } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { getTodayString, getCurrentWeekKey, getCurrentQuarterInfo, getQuarterLabel } from '../../utils/dateUtils';
 import type { Routine } from '../../types';
+
+function getGreeting(): { text: string; sub: string } {
+  const h = new Date().getHours();
+  if (h < 6) return { text: 'おやすみ前ですか？', sub: '明日も良い一日を' };
+  if (h < 10) return { text: 'おはようございます', sub: '今日も一日頑張りましょう' };
+  if (h < 12) return { text: '午前中です', sub: '集中して取り組みましょう' };
+  if (h < 14) return { text: 'お昼ですね', sub: 'リフレッシュしましょう' };
+  if (h < 17) return { text: '午後です', sub: '後半戦も頑張りましょう' };
+  if (h < 20) return { text: 'お疲れ様です', sub: '今日の振り返りをしましょう' };
+  return { text: 'お疲れ様でした', sub: 'ゆっくり休みましょう' };
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -48,11 +59,17 @@ export default function Dashboard() {
 
   const morningDone = !!todayLog?.morningCheckedAt;
   const eveningDone = !!todayLog?.eveningCheckedAt;
+  const greeting = getGreeting();
+
+  // Routine completion rate for the animated ring
+  const routineDoneCount = todayChecks.length;
+  const routineTotalCount = activeRoutines.length;
+  const routineRate = routineTotalCount > 0 ? Math.round((routineDoneCount / routineTotalCount) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4 border-b border-border-color">
+      <div className="px-5 pt-8 pb-4 border-b border-border-color animate-fade-in">
         <p className="text-xs text-text-muted mb-1">
           {new Date().toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'long' })}
         </p>
@@ -60,9 +77,12 @@ export default function Dashboard() {
           <h1 className="text-xl font-semibold text-text-primary">{profile?.name}</h1>
           <p className="text-xs text-text-muted">{profile?.company} · {profile?.role}</p>
         </div>
+        <p className="text-xs text-text-secondary mt-1.5 animate-slide-up" style={{ animationDelay: '150ms' }}>
+          {greeting.text} — {greeting.sub}
+        </p>
       </div>
 
-      <div className="px-5 py-4 space-y-5 pb-24">
+      <div className="px-5 py-4 space-y-5 pb-24 stagger-children">
         {/* Check-in / Check-out */}
         <div className="flex gap-3">
           <button
@@ -176,13 +196,13 @@ export default function Dashboard() {
             <button onClick={() => navigate('/tasks')} className="text-xs text-text-muted">詳細 →</button>
           </div>
           <div className="flex items-end gap-3">
-            <span className="text-3xl font-light text-text-primary">
+            <span className="text-3xl font-light text-text-primary animate-counter-up">
               {weekRate}<span className="text-base">%</span>
             </span>
             <span className="text-xs text-text-muted mb-1">{weekDone} / {weekTasks.length} タスク</span>
           </div>
           <div className="h-1 bg-background-secondary rounded-full overflow-hidden">
-            <div className="h-full bg-text-primary transition-all rounded-full" style={{ width: `${weekRate}%` }} />
+            <div className="h-full bg-text-primary rounded-full animate-progress-bar" style={{ width: `${weekRate}%` }} />
           </div>
 
           {/* Active tasks with progress (display only) */}
@@ -209,7 +229,7 @@ export default function Dashboard() {
                   </div>
                   <div className="h-0.5 bg-background-secondary rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-text-primary rounded-full transition-all"
+                      className="h-full bg-text-primary rounded-full animate-progress-bar"
                       style={{ width: `${task.progress ?? 0}%` }}
                     />
                   </div>
@@ -267,10 +287,28 @@ function RoutinesSection({
   onToggle: (id: string) => void;
   onManage: () => void;
 }) {
+  const [bouncingId, setBouncingId] = useState<string | null>(null);
+
+  const handleToggle = useCallback((id: string) => {
+    setBouncingId(id);
+    onToggle(id);
+    setTimeout(() => setBouncingId(null), 350);
+  }, [onToggle]);
+
+  const doneCount = checkedIds.length;
+  const totalCount = routines.length;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-text-muted uppercase tracking-wide">デイリールーティン</p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-text-muted uppercase tracking-wide">デイリールーティン</p>
+          {totalCount > 0 && (
+            <span className="text-[10px] text-text-muted animate-counter-up">
+              {doneCount}/{totalCount}
+            </span>
+          )}
+        </div>
         <button onClick={onManage} className="p-1">
           <Settings size={14} className="text-text-muted" />
         </button>
@@ -286,13 +324,16 @@ function RoutinesSection({
         <div className="flex gap-3 overflow-x-auto pb-1">
           {routines.map(routine => {
             const checked = checkedIds.includes(routine.id);
+            const isBouncing = bouncingId === routine.id;
             return (
               <button
                 key={routine.id}
-                onClick={() => onToggle(routine.id)}
+                onClick={() => handleToggle(routine.id)}
                 className="flex flex-col items-center gap-1.5 flex-shrink-0"
               >
                 <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-lg transition-all ${
+                  isBouncing ? 'animate-scale-bounce' : ''
+                } ${
                   checked
                     ? 'border-text-primary bg-text-primary opacity-40'
                     : 'border-border-color bg-background'

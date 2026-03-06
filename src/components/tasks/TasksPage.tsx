@@ -183,9 +183,10 @@ function TaskItem({
               stroke="#0A0A0A" strokeWidth="2.5"
               strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
               strokeLinecap="round"
+              className="animate-ring-fill"
             />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-text-primary">
+          <span className="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-text-primary animate-counter-up">
             {progress}%
           </span>
         </div>
@@ -234,7 +235,7 @@ function TaskItem({
           {!isDone && (
             <>
               <div className="h-0.5 bg-background-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-text-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                <div className="h-full bg-text-primary rounded-full animate-progress-bar" style={{ width: `${progress}%` }} />
               </div>
               <div className="flex gap-1">
                 {PROGRESS_STEPS.map(step => (

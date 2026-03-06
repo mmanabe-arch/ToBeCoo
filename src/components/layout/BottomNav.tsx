@@ -28,13 +28,15 @@ export default function BottomNav() {
           >
             {({ isActive }) => (
               <>
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className={`text-[10px] ${isActive ? 'font-semibold' : 'font-normal'}`}>
+                <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'scale-100'}`}>
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
+                </div>
+                <span className={`text-[10px] transition-all duration-200 ${isActive ? 'font-semibold' : 'font-normal'}`}>
                   {label}
                 </span>
-                {isActive && (
-                  <span className="absolute bottom-0 w-6 h-0.5 bg-text-primary rounded-full" />
-                )}
+                <span className={`absolute bottom-0 h-0.5 bg-text-primary rounded-full transition-all duration-300 ${
+                  isActive ? 'w-6 opacity-100' : 'w-0 opacity-0'
+                }`} />
               </>
             )}
           </NavLink>
